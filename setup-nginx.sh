@@ -24,7 +24,7 @@ controller:
     prometheusRule:
       enabled: true
       rules:
-      - alert: NGINXConfigFailed
+        - alert: NGINXConfigFailed
           expr: count(nginx_ingress_controller_config_last_reload_successful == 0) > 0
           for: 1s
           labels:
@@ -32,7 +32,7 @@ controller:
           annotations:
             description: bad ingress config - nginx config test failed
             summary: uninstall the latest ingress changes to allow config reloads to resume
-      - alert: NGINXCertificateExpiry
+        - alert: NGINXCertificateExpiry
           expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds{host!="_"}) by (host) - time()) < 604800
           for: 1s
           labels:
@@ -40,7 +40,7 @@ controller:
           annotations:
             description: ssl certificate(s) will expire in less then a week
             summary: renew expiring certificates to avoid downtime
-      - alert: NGINXTooMany500s
+        - alert: NGINXTooMany500s
           expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
           for: 1m
           labels:
@@ -48,7 +48,7 @@ controller:
           annotations:
             description: Too many 5XXs
             summary: More than 5% of all requests returned 5XX, this requires your attention
-      - alert: NGINXTooMany400s
+        - alert: NGINXTooMany400s
           expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
           for: 1m
           labels:

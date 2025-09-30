@@ -130,10 +130,6 @@ containerdConfigPatches:
       endpoint = ["http://proxy-kube:5000"]
 nodes:
   - role: control-plane
-    extraMounts:
-    - hostPath: $PWD/.ssl/root-ca.pem
-      containerPath: /etc/ca-certificates/keycloak/root-ca.pem
-      readOnly: true
   - role: worker
   - role: worker
   - role: worker
