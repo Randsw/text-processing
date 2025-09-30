@@ -59,8 +59,6 @@ alertmanager:
       - alertmanager.kind.cluster
 grafana:
   enabled: true
-  image:
-    tag: "12.2"
   sidecar:
     datasources:
       searchNamespace: ALL
