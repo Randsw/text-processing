@@ -21,6 +21,8 @@ vector:
     - key: node-role.kubernetes.io/control-plane
       operator: "Exists"
       effect: "NoSchedule"
+  podMonitor:
+    enabled: true
 dashboards:
   enabled: true
   labels:

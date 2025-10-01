@@ -58,6 +58,22 @@ alertmanager:
     hosts:
       - alertmanager.kind.cluster
 grafana:
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 100
+    timeoutSeconds: 300
+    periodSeconds: 100
+    failureThreshold: 40
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 100
+    periodSeconds: 100
+    timeoutSeconds: 300
+    failureThreshold: 40
   enabled: true
   sidecar:
     datasources:
