@@ -11,87 +11,7 @@ dashboards:
   enabled: true
 EOF
 
-cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaNodePool
-metadata:
-  name: controller
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: kafka-cluster
-spec:
-  replicas: 3
-  roles:
-    - controller
-  storage:
-    type: jbod
-    volumes:
-      - id: 0
-        type: ephemeral
-        kraftMetadata: shared
----
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaNodePool
-metadata:
-  name: broker
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: kafka-cluster
-spec:
-  replicas: 3
-  roles:
-    - broker
-  storage:
-    type: jbod
-    volumes:
-      - id: 0
-        type: ephemeral
-        kraftMetadata: shared
----
-apiVersion: kafka.strimzi.io/v1beta2
-kind: Kafka
-metadata:
-  name: kafka-cluster
-  namespace: kafka
-  annotations:
-    strimzi.io/node-pools: enabled
-    strimzi.io/kraft: enabled
-spec:
-  kafkaExporter: {}
-  kafka:
-    version: 4.1.0
-    metadataVersion: 4.1-IV0
-    listeners:
-      - name: plain
-        port: 9092
-        type: internal
-        tls: false
-      - name: tls
-        port: 9093
-        type: internal
-        tls: true
-        authentication:
-          type: tls
-    authorization:
-      type: simple
-      superUsers:
-        - CN=root
-    config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      default.replication.factor: 3
-      min.insync.replicas: 2
-    metricsConfig:
-      type: jmxPrometheusExporter
-      valueFrom:
-        configMapKeyRef:
-          name: kafka-metrics
-          key: kafka-metrics-config.yml
-  entityOperator:
-    topicOperator: {}
-    userOperator: {}
----
+cat << 'EOF' | kubectl apply -f -
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -236,8 +156,6 @@ data:
       type: GAUGE
       labels:
         quantile: "0.$4"
-    # KRaft overall related metrics
-    # distinguish between always increasing COUNTER (total and max) and variable GAUGE (all others) metrics
     - pattern: "kafka.server<type=raft-metrics><>(.+-total|.+-max):"
       name: kafka_server_raftmetrics_$1
       type: COUNTER
@@ -250,18 +168,97 @@ data:
     - pattern: "kafka.server<type=raft-metrics><>(.+):"
       name: kafka_server_raftmetrics_$1
       type: GAUGE
-    # KRaft "low level" channels related metrics
-    # distinguish between always increasing COUNTER (total and max) and variable GAUGE (all others) metrics
     - pattern: "kafka.server<type=raft-channel-metrics><>(.+-total|.+-max):"
       name: kafka_server_raftchannelmetrics_$1
       type: COUNTER
     - pattern: "kafka.server<type=raft-channel-metrics><>(.+):"
       name: kafka_server_raftchannelmetrics_$1
       type: GAUGE
-    # Broker metrics related to fetching metadata topic records in KRaft mode
     - pattern: "kafka.server<type=broker-metadata-metrics><>(.+):"
       name: kafka_server_brokermetadatametrics_$1
       type: GAUGE
+EOF
+
+cat << EOF | kubectl apply -f -
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: controller
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  replicas: 3
+  roles:
+    - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: ephemeral
+        kraftMetadata: shared
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: broker
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  replicas: 3
+  roles:
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: ephemeral
+        kraftMetadata: shared
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: kafka-cluster
+  namespace: kafka
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafkaExporter: {}
+  kafka:
+    version: 4.1.0
+    metadataVersion: 4.1-IV0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+        authentication:
+          type: tls
+    authorization:
+      type: simple
+      superUsers:
+        - CN=root
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
