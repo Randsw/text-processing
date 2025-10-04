@@ -186,12 +186,12 @@ EOF
 dnsmasq(){
   log "Hosts ..."
   local INGRESS_LB_IP=$(get_service_lb_ip ingress-nginx ingress-nginx-controller)
-  echo "$INGRESS_LB_IP minio-ui.kind.cluster kibana.kind.cluster grafana.kind.cluster alertmanager.kind.cluster single.kind.cluster agent.kind.cluster vl.kind.cluster" | sudo tee -a /etc/hosts
+  echo "$INGRESS_LB_IP kibana.kind.cluster elastic.kind.cluster minio-ui.kind.cluster grafana.kind.cluster alertmanager.kind.cluster single.kind.cluster agent.kind.cluster vl.kind.cluster" | sudo tee -a /etc/hosts
 }
 
 cleanup(){
   log "CLEANUP ..."
-  sudo sed -i '/minio-ui.kind.cluster kibana.kind.cluster grafana.kind.cluster alertmanager.kind.cluster single.kind.cluster agent.kind.cluster vl.kind.cluster"$/d' /etc/hosts
+  sudo sed -i '/kibana.kind.cluster elastic.kind.cluster minio-ui.kind.cluster grafana.kind.cluster alertmanager.kind.cluster single.kind.cluster agent.kind.cluster vl.kind.cluster"$/d' /etc/hosts
   kind delete cluster || true
 }
 
