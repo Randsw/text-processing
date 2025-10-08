@@ -224,6 +224,17 @@ spec:
         name: connect-cluster
       operations:
         - Read
+        - Describe
+        - Write
+        - Create
+    - resource:
+        type: group
+        name: connect-elasticsearch-sink-connector
+      operations:
+        - Read
+        - Describe
+        - Write
+        - Create
     - resource:
         type: topic
         name: connect-cluster-configs
@@ -296,10 +307,10 @@ spec:
     config.storage.replication.factor: 3
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
-    key.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter: org.apache.kafka.connect.string.stringconverter
     value.converter: org.apache.kafka.connect.json.JsonConverter
-    key.converter.schemas.enable: true
-    value.converter.schemas.enable: true
+    key.converter.schemas.enable: false
+    value.converter.schemas.enable: false
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:

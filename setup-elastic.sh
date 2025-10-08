@@ -8,8 +8,8 @@ set -e
     --repo https://helm.elastic.co eck-operator eck-operator --values - <<EOF
 replicaCount: 2
 config:
-   metrics:
-     port: "9200"
+  metrics:
+    port: "9200"
 podMonitor:
   enabled: true
 EOF
@@ -63,6 +63,7 @@ eck-elasticsearch:
             runAsUser: 1000  # Match Elasticsearch user ID
             runAsGroup: 1000
             allowPrivilegeEscalation: false
+  version: 8.12.0
   monitoring:
     metrics:
       elasticsearchRefs:
@@ -115,6 +116,7 @@ eck-kibana:
               port: 9684
             initialDelaySeconds: 10
             periodSeconds: 10
+  version: 8.12.0
   monitoring:
     metrics:
       elasticsearchRefs:
