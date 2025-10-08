@@ -269,6 +269,8 @@ kind: KafkaConnect
 metadata:
   name: connect-elastic
   namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster
   annotations:
     strimzi.io/use-connector-resources: "true"
 spec:
@@ -294,6 +296,7 @@ spec:
     config.storage.replication.factor: 3
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
+    key.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter: org.apache.kafka.connect.json.JsonConverter
     key.converter.schemas.enable: true
     value.converter.schemas.enable: true
@@ -303,28 +306,30 @@ spec:
       configMapKeyRef:
         name: connect-metrics
         key: metrics-config.yml
-EOF
-#---
-# apiVersion: kafka.strimzi.io/v1beta2
-# kind: KafkaConnector
-# metadata:
-#   name: elasticsearch-sink-connector
-#   namespace: kafka
-#   labels:
-#     strimzi.io/cluster: kafka-cluster
-# spec:
-#   class: io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
-#   tasksMax: 1
-#   # https://docs.confluent.io/kafka-connect-elasticsearch/current/configuration_options.html
-#   config:
-#     connector.class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
-#     tasks.max: "1"
-#     topics: "result-topic"
-#     connection.url: "https://elasticsearch-es-http.elastic:9200"
-#     connection.username: "elastic"
-#     connection.password: "WxO5i2Ye99RA67F9PSU556FT"
-#     key.ignore: "false"
-#     behavior.on.null.values: "delete"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: elasticsearch-sink-connector
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: connect-elastic
+spec:
+  class: io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+  tasksMax: 1
+  # https://docs.confluent.io/kafka-connect-elasticsearch/current/configuration_options.html
+  config:
+    connector.class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
+    tasks.max: "1"
+    topics: "result-topic"
+    connection.url: "https://elasticsearch-es-http.elastic:9200"
+    connection.username: "elastic"
+    connection.password: "6I1ZMc1TL547i1aLp8P3ag8E"
+    key.ignore: "false"
+    schema.ignore: "false"
+    behavior.on.null.values: "delete"
+    elastic.https.ssl.endpoint.identification.algorithm: ""
+    elastic.security.protocol: "SSL"
 # EOF
 
 #   build:

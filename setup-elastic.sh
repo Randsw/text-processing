@@ -38,7 +38,7 @@ eck-elasticsearch:
             name: metrics
           env:
           - name: ES_URI
-            value: "https://elasticsearch-es-http:9200"
+            value: "http://elasticsearch-es-http:9200"
           - name: ES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -68,6 +68,10 @@ eck-elasticsearch:
       elasticsearchRefs:
         - name: elasticsearch
           namespace: elastic
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
   ingress:
     enabled: true
     className: nginx
