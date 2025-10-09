@@ -259,21 +259,12 @@ spec:
         - Describe
         - Write
         - Create
-      # Additional topics and groups used by connectors
-    # Change to match the topics used by your connectors
-    - resource:
-        type: group
-        name: connect-cluster
-      operations:
-        - Read
     - resource:
         type: topic
         name: result-topic
       operations:
         - Read
         - Describe
-        - Write
-        - Create
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnect
@@ -288,7 +279,19 @@ spec:
   version: 4.1.0
   replicas: 1
   bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  image: ttl.sh/randsw-strimzi-connect-example-4.1.0:24h
+  image: ttl.sh/randsw-strimzi-connect-example-4.1.1:24h
+  template:
+    pod:
+      volumes:
+        - name: tls
+          secret:
+            defaultMode: 420
+            secretName: confluent-schema-registry-jks
+    connectContainer:
+      volumeMounts:
+      - mountPath: /mnt/schemaregistry
+        name: tls
+        readOnly: true
   tls:
     trustedCertificates:
       - secretName: kafka-cluster-cluster-ca-cert
@@ -308,9 +311,10 @@ spec:
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
     key.converter: org.apache.kafka.connect.storage.StringConverter
-    value.converter: org.apache.kafka.connect.storage.StringConverter
-    key.converter.schemas.enable: false
-    value.converter.schemas.enable: false
+    value.converter: io.confluent.connect.json.JsonSchemaConverter
+    value.converter.schema.registry.url: "https://confluent-schema-registry"
+    value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
+    value.converter.schema.registry.ssl.truststore.password: "dS8iek4rwOVbQSwt7crTTWnX"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:
@@ -335,10 +339,11 @@ spec:
     topics: "result-topic"
     connection.url: "http://elasticsearch-es-http.elastic:9200"
     connection.username: "elastic"
-    connection.password: "6I1ZMc1TL547i1aLp8P3ag8E"
+    connection.password: "3umqP1321DgX6d9Qra3ry3q1"
     key.ignore: "true"
     schema.ignore: "true"
     behavior.on.null.values: "delete"
+    drop.invalid.message: false
 EOF
 
 #   build:

@@ -13,6 +13,11 @@ RUN mkdir -p /opt/kafka/plugins/elasticsearch-connector && \
 
 USER 1001
 
+# Download Confluent JSON converter from Confluent Hub
+COPY ./confluentinc-kafka-connect-json-schema-converter-8.0.1.zip /opt/kafka/plugins
+RUN cd /opt/kafka/plugins && unzip -q confluentinc-kafka-connect-json-schema-converter-8.0.1.zip && \
+    rm confluentinc-kafka-connect-json-schema-converter-8.0.1.zip
+
 # Download Elasticsearch connector from Confluent Hub
 RUN cd /opt/kafka/plugins && \
     wget -q "https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-elasticsearch/versions/15.0.1/confluentinc-kafka-connect-elasticsearch-15.0.1.zip" && \
