@@ -307,8 +307,8 @@ spec:
     config.storage.replication.factor: 3
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
-    key.converter: org.apache.kafka.connect.string.stringconverter
-    value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
     key.converter.schemas.enable: false
     value.converter.schemas.enable: false
   metricsConfig:
@@ -333,15 +333,13 @@ spec:
     connector.class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
     tasks.max: "1"
     topics: "result-topic"
-    connection.url: "https://elasticsearch-es-http.elastic:9200"
+    connection.url: "http://elasticsearch-es-http.elastic:9200"
     connection.username: "elastic"
     connection.password: "6I1ZMc1TL547i1aLp8P3ag8E"
-    key.ignore: "false"
-    schema.ignore: "false"
+    key.ignore: "true"
+    schema.ignore: "true"
     behavior.on.null.values: "delete"
-    elastic.https.ssl.endpoint.identification.algorithm: ""
-    elastic.security.protocol: "SSL"
-# EOF
+EOF
 
 #   build:
 #       output:

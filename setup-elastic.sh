@@ -76,9 +76,6 @@ eck-elasticsearch:
   ingress:
     enabled: true
     className: nginx
-    annotations:
-      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     hosts:
       - host: elastic.kind.cluster
         path: /
