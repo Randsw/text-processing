@@ -321,6 +321,9 @@ spec:
       configMapKeyRef:
         name: connect-metrics
         key: metrics-config.yml
+EOF
+
+cat << 'EOF' | kubectl apply -f -
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
@@ -344,19 +347,12 @@ spec:
     schema.ignore: "true"
     behavior.on.null.values: "delete"
     drop.invalid.message: false
-    # transforms: "InsertField,TimestampConverter"
-    # transforms.InsertField.timestamp.field: "timestamp"
-    # transforms.InsertField.type: "org.apache.kafka.connect.transforms.InsertField$Value"
-    # transforms.TimestampConverter.type: "org.apache.kafka.connect.transforms.TimestampConverter$Value"
-    # transforms.TimestampConverter.field: "timestamp"
-    # transforms.TimestampConverter.format: "yyyy-MM-dd HH:mm:ss"
-    # transforms.TimestampConverter.target.type: "string"
     transforms                          : "insertTS,formatTS"
     transforms.insertTS.type            : "org.apache.kafka.connect.transforms.InsertField$Value"
-    transforms.insertTS.timestamp.field : "messageTS3"
+    transforms.insertTS.timestamp.field : "@timestamp"
     transforms.formatTS.type            : "org.apache.kafka.connect.transforms.TimestampConverter$Value"
-    #transforms.formatTS.format          : "yyyy-MM-dd HH:mm:ss:SSS"
-    transforms.formatTS.field           : "messageTS3"
+    transforms.formatTS.format          : "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    transforms.formatTS.field           : "@timestamp"
     transforms.formatTS.target.type     : "string"
 EOF
 
