@@ -324,7 +324,6 @@ spec:
 EOF
 
 cat << 'EOF' | kubectl apply -f -
----
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
@@ -355,44 +354,3 @@ spec:
     transforms.formatTS.field           : "@timestamp"
     transforms.formatTS.target.type     : "string"
 EOF
-
-#   build:
-#       output:
-#         type: docker
-#         # This image will last only for 24 hours and might be overwritten by other users
-#         # Strimzi will use this tag to push the image. But it will use the digest to pull
-#         # the container image to make sure it pulls exactly the image we just built. So
-#         # it should not happen that you pull someone else's container image. However, we
-#         # recommend changing this to your own container registry or using a different
-#         # image name for any other than demo purposes.
-#         image: ttl.sh/randsw-strimzi-connect-example-4.1.0:24h
-#       plugins:
-#         - name: kafka-connect-elastic
-#           artifacts:
-#             - type: maven
-#               repository: https://packages.confluent.io/maven
-#               group: io.confluent
-#               artifact: kafka-connect-elasticsearch 
-#               version: 15.0.0
-
-
-# apiVersion: kafka.strimzi.io/v1alpha1
-# kind: KafkaConnect
-# metadata:
-# name: my-connect-cluster
-# spec:
-# image: docker.io/scholzj/kafka:camel-kafka-2.4.0
-# replicas: 3
-# bootstrapServers: my-cluster-kafka-bootstrap:9092
-# externalConfiguration:
-# volumes:
-# - name: aws-credentials
-# secret:
-# secretName: aws-credentials
-# config:
-# config.providers: file
-# config.providers.file.class: org.apache.kafka.common.config.provider.FileConfigProvider
-# key.converter: org.apache.kafka.connect.json.JsonConverter
-# value.converter: org.apache.kafka.connect.json.JsonConverter
-# key.converter.schemas.enable: false
-# value.converter.schemas.enable: false
