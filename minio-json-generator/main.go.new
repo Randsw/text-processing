@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,16 +21,29 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// Updated message struct to match the desired format
-type value struct {
+// Schema IDs - these would be registered in Schema Registry
+const (
+	KeySchemaID   = 1
+	ValueSchemaID = 2
+)
+
+// Message structures
+type ValueData struct {
 	User  string `json:"user"`
 	Car   string `json:"car"`
 	Color string `json:"color"`
 }
 
-type message struct {
-	Key   string `json:"key"`
-	Value value  `json:"value"`
+type KafkaMessage struct {
+	Key   string    `json:"key"`
+	Value ValueData `json:"value"`
+}
+
+// Confluent Wire Format message
+type ConfluentMessage struct {
+	MagicByte byte
+	SchemaID  int32
+	Data      []byte
 }
 
 type MinioConfig struct {
@@ -80,7 +94,6 @@ func (m *MinioClient) EnsureBucketExists(ctx context.Context) error {
 }
 
 func (m *MinioClient) GetLastObjectNumber(ctx context.Context) (int, error) {
-	// List all objects in the bucket
 	objectCh := m.client.ListObjects(ctx, m.config.BucketName, minio.ListObjectsOptions{
 		Recursive: true,
 	})
@@ -97,7 +110,6 @@ func (m *MinioClient) GetLastObjectNumber(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	// Sort object names to find the highest number
 	sort.Slice(objectNames, func(i, j int) bool {
 		numI := extractNumber(objectNames[i])
 		numJ := extractNumber(objectNames[j])
@@ -111,10 +123,9 @@ func (m *MinioClient) GetLastObjectNumber(ctx context.Context) (int, error) {
 }
 
 func extractNumber(objectName string) int {
-	// Remove file extension if present
 	objectName = strings.TrimSuffix(objectName, ".json")
+	objectName = strings.TrimSuffix(objectName, ".bin")
 
-	// Extract numeric part
 	var numberStr string
 	for i := len(objectName) - 1; i >= 0; i-- {
 		if objectName[i] >= '0' && objectName[i] <= '9' {
@@ -136,7 +147,61 @@ func extractNumber(objectName string) int {
 	return num
 }
 
-func (m *MinioClient) UploadObject(ctx context.Context, objectName string, data *message) error {
+// encodeConfluentFormat encodes data in Confluent Wire Format
+func encodeConfluentFormat(schemaID int32, data interface{}) ([]byte, error) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	var buf bytes.Buffer
+	// Write magic byte
+	buf.WriteByte(0)
+	// Write schema ID (big-endian)
+	binary.Write(&buf, binary.BigEndian, schemaID)
+	// Write JSON data
+	buf.Write(jsonData)
+
+	return buf.Bytes(), nil
+}
+
+func (m *MinioClient) UploadConfluentObject(ctx context.Context, objectName string, keyData, valueData interface{}) error {
+	// Encode key in Confluent format
+	keyBytes, err := encodeConfluentFormat(KeySchemaID, keyData)
+	if err != nil {
+		return fmt.Errorf("failed to encode key: %w", err)
+	}
+
+	// Encode value in Confluent format
+	valueBytes, err := encodeConfluentFormat(ValueSchemaID, valueData)
+	if err != nil {
+		return fmt.Errorf("failed to encode value: %w", err)
+	}
+
+	// Create a combined message structure
+	message := map[string]interface{}{
+		"key":   keyBytes,
+		"value": valueBytes,
+	}
+
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %w", err)
+	}
+
+	_, err = m.client.PutObject(ctx, m.config.BucketName, objectName,
+		bytes.NewReader(jsonData), int64(len(jsonData)), minio.PutObjectOptions{
+			ContentType: "application/json",
+		})
+
+	if err != nil {
+		return fmt.Errorf("failed to upload object: %w", err)
+	}
+
+	return nil
+}
+
+func (m *MinioClient) UploadJSONObject(ctx context.Context, objectName string, data *KafkaMessage) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
@@ -154,21 +219,20 @@ func (m *MinioClient) UploadObject(ctx context.Context, objectName string, data 
 	return nil
 }
 
-func generateRandomData(r *rand.Rand) *message {
+func generateRandomData(r *rand.Rand) *KafkaMessage {
 	IDs := []string{"1", "2", "3", "4"}
 	names := []string{"John", "Mike", "Dwight", "Pam", "Kevin"}
 	cars := []string{"Kia", "Ford", "BMW"}
 	colors := []string{"Red", "Black", "White", "Blue", "Green", "Gray"}
 
-	// Generate random selections
 	randomID := IDs[r.Intn(len(IDs))]
 	randomName := names[r.Intn(len(names))]
 	randomCar := cars[r.Intn(len(cars))]
 	randomColor := colors[r.Intn(len(colors))]
 
-	return &message{
+	return &KafkaMessage{
 		Key: fmt.Sprintf("key-%s", randomID),
-		Value: value{
+		Value: ValueData{
 			User:  randomName,
 			Car:   randomCar,
 			Color: randomColor,
@@ -177,16 +241,14 @@ func generateRandomData(r *rand.Rand) *message {
 }
 
 func main() {
-	// MinIO configuration
 	config := MinioConfig{
-		Endpoint:        "minio.kind.cluster", // Change to your MinIO endpoint
-		AccessKeyID:     "minio",              // Change to your access key
-		SecretAccessKey: "minio123",           // Change to your secret key
+		Endpoint:        "minio.kind.cluster",
+		AccessKeyID:     "minio",
+		SecretAccessKey: "minio123",
 		UseSSL:          false,
 		BucketName:      "texts",
 	}
 
-	// Initialize MinIO client
 	minioClient, err := NewMinioClient(config)
 	if err != nil {
 		log.Fatal("Error creating MinIO client:", err)
@@ -195,35 +257,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Ensure bucket exists
 	err = minioClient.EnsureBucketExists(ctx)
 	if err != nil {
 		log.Fatal("Error ensuring bucket exists:", err)
 	}
 
-	// Get the last object number to continue from there
 	lastNumber, err := minioClient.GetLastObjectNumber(ctx)
 	if err != nil {
 		log.Fatal("Error getting last object number:", err)
 	}
 
 	log.Printf("Starting from object number: %d", lastNumber+1)
-	log.Println("Generating objects infinitely... Press Ctrl+C to stop")
+	log.Println("Generating Confluent format objects infinitely... Press Ctrl+C to stop")
 
-	// Initialize random number generator
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	// Set up signal handling for graceful shutdown
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 
-	// Counter for uploaded objects
 	var uploadedCount int64
-
-	// Channel to communicate between the main loop and signal handler
 	done := make(chan struct{})
 
-	// Start the infinite generation in a goroutine
 	go func() {
 		defer close(done)
 
@@ -236,11 +289,10 @@ func main() {
 			default:
 				objectName := fmt.Sprintf("kafka/%d.json", currentNumber)
 
-				// Generate random data
 				data := generateRandomData(r)
 
-				// Upload to MinIO
-				err = minioClient.UploadObject(ctx, objectName, data)
+				// Upload in regular JSON format (you can switch to UploadConfluentObject for wire format)
+				err = minioClient.UploadConfluentObject(ctx, objectName, data.Key, data.Value)
 				if err != nil {
 					log.Printf("Error uploading object %s: %v", objectName, err)
 				} else {
@@ -252,22 +304,14 @@ func main() {
 				}
 
 				currentNumber++
-
-				// Small delay to prevent overwhelming the system
-				// Adjust this as needed for your use case
 				time.Sleep(2000 * time.Millisecond)
 			}
 		}
 	}()
 
-	// Wait for interrupt signal
 	<-signalCh
 	log.Println("\nReceived interrupt signal. Shutting down gracefully...")
-
-	// Cancel the context to stop the generation loop
 	cancel()
-
-	// Wait for the generation loop to finish
 	<-done
 
 	log.Printf("Program stopped. Total objects uploaded in this session: %d", atomic.LoadInt64(&uploadedCount))
