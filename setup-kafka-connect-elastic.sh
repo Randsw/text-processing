@@ -314,7 +314,7 @@ spec:
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "dS8iek4rwOVbQSwt7crTTWnX"
+    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:

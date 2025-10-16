@@ -296,6 +296,11 @@ spec:
     config.storage.replication.factor: 3
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: io.confluent.connect.json.JsonSchemaConverter
+    value.converter.schema.registry.url: "https://confluent-schema-registry"
+    value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
+    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:
@@ -320,26 +325,24 @@ spec:
   config:
     connector.class: "io.lenses.streamreactor.connect.aws.s3.source.S3SourceConnector"
     tasks.max: "1"
-    connect.s3.kcql: insert into result-topic select * from texts STOREAS `JSON`
     connect.s3.kcql: |
       INSERT INTO result-topic 
       SELECT * 
-      FROM texts 
-      WITH_FLUSH_SIZE = 1000, 
-           FLUSH_INTERVAL = 60000,
-           STORE_AS = `JSON`
+      FROM texts:kafka
+      STOREAS `JSON`
     name: s3-source
     key.converter: org.apache.kafka.connect.storage.StringConverter
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "dS8iek4rwOVbQSwt7crTTWnX"
-    connect.s3.custom.endpoint: http://minio.minio
+    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
+    connect.s3.custom.endpoint: http://minio.minio.svc.cluster.local
     connect.s3.aws.region: us-east-1
     connect.s3.aws.secret.key: minio123
     connect.s3.aws.access.key: minio
     connect.s3.aws.auth.mode: Credentials
     connect.s3.source.ordering.type: LastModified
     connect.s3.source.partition.extractor.regex: none
-    connect.s3.enable.virtual.host.buckets: "false"
+    # Important: Force path-style access and handle bucket naming
+    connect.s3.vhost.bucket: "true"
 EOF
