@@ -174,7 +174,7 @@ func main() {
 			logger.Info("Value from kafka", zap.String("Key", outMessage.Key), zap.String("Car", outMessage.Value.Car),
 				zap.String("User", outMessage.Value.User), zap.String("Color", outMessage.Value.Color))
 
-			// Send to out topic
+			// Send data to out topic
 			msg := kafka.Message{
 				Key:   []byte(outMessage.Key),
 				Value: Serialize(&outMessage.Value, ser, outTopic),
