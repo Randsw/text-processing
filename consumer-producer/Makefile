@@ -1,4 +1,4 @@
-GO_VERSION := 1.24
+GO_VERSION := 1.25
 
 .PHONY: build
 build:

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: consumer-producer
-        image: ghcr.io/randsw/kafka-consumer-producer
+        image: ghcr.io/randsw/kafka-consumer-producer:latest
         imagePullPolicy: Always
         resources:
           limits:
