@@ -198,7 +198,7 @@ metadata:
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:
-  partitions: 3
+  partitions: 1
   replicas: 3
   config:
     # http://kafka.apache.org/documentation/#topicconfigs

@@ -184,9 +184,9 @@ func main() {
 				logger.Error("Failed to create serializer: %s\n", zap.String("err", err.Error()))
 				return
 			} else {
-				logger.Info("produced", zap.String("key", outMessage.Key), zap.String("message", fmt.Sprintf("%s", outMessage.Value)))
+				logger.Info("produced", zap.String("key", string(msg.Key)), zap.String("message", string(msg.Value)))
 			}
-
+			time.Sleep(1 * time.Millisecond)
 		}
 	}()
 	// Wait for SITERM or SIGINT
