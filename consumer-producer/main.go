@@ -145,7 +145,7 @@ func main() {
 	})
 	defer r.Close()
 
-	writer := newKafkaWriter(BootstrapServers, topic)
+	writer := newKafkaWriter(BootstrapServers, outTopic)
 	defer writer.Close()
 
 	wg.Add(1)
