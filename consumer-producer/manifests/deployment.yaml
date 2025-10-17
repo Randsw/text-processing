@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer-producer
+  namespace: kafka
+  labels:
+    app: consumer-producer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - name: consumer-producer
+        image: ghcr.io/randsw/kafka-consumer-producer
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        env:
+        - name:  BOOTSTRAP_SERVERS
+          value: kafka-cluster-kafka-bootstrap:9093
+        - name:  TOPIC
+          value: extract-topic
+        - name:  SCHEMA_REGISTRY_URL
+          value: confluent-schema-registry
+        - name:  GROUP_ID
+          value: s3-consumer-group
+        - name:  OUT_TOPIC
+          value: result-topic
+        volumeMounts:
+        - name: cluster-ca-cert
+          readOnly: true
+          mountPath: "/tmp/ca"
+        - name: client-mtls
+          readOnly: true
+          mountPath: "/tmp/client"
+      volumes:
+        - name: cluster-ca-cert
+          secret:
+            secretName: kafka-cluster-cluster-ca-cert
+            defaultMode: 0444
+        - name: client-mtls
+          secret:
+            secretName: consumer-producer-user
+            defaultMode: 0444
