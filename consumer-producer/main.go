@@ -112,9 +112,7 @@ func main() {
 
 	schemaregistryConfig := schemaregistry.NewConfig(fmt.Sprintf("https://%s", schemaRegistryURL))
 	schemaregistryConfig.SslCaLocation = "/tmp/ca/ca.crt"
-
 	client, err := schemaregistry.NewClient(schemaregistryConfig)
-
 	if err != nil {
 		logger.Error("Failed to create schema registry client: %s\n", zap.String("err", err.Error()))
 		os.Exit(1)
@@ -128,7 +126,6 @@ func main() {
 
 	// Subject name in schema registry must match topic name!!!!!!!
 	ser, err := jsonschema.NewSerializer(client, serde.ValueSerde, jsonschema.NewSerializerConfig())
-
 	if err != nil {
 		logger.Error("Failed to create serializer: %s\n", zap.String("err", err.Error()))
 		os.Exit(1)
@@ -149,15 +146,13 @@ func main() {
 	defer r.Close()
 
 	writer := newKafkaWriter(BootstrapServers, topic)
-
 	defer writer.Close()
 
 	wg.Add(1)
 	go func() {
 		for {
 			defer wg.Done()
-			// make a new reader that consumes from topic-A
-
+			// make a new reader that consumes from topic
 			m, err := r.ReadMessage(context.Background())
 			if err != nil {
 				logger.Error("Failed to read message", zap.String("err", err.Error()))
