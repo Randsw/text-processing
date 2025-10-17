@@ -20,16 +20,10 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// Updated message struct to match the desired format
-type value struct {
-	User  string `json:"user"`
-	Car   string `json:"car"`
-	Color string `json:"color"`
-}
-
-type message struct {
-	Key   string `json:"key"`
-	Value value  `json:"value"`
+// Simple structure for Lenses S3 Kafka Connector
+type KafkaMessage struct {
+	Key   string                 `json:"key"`
+	Value map[string]interface{} `json:"value"`
 }
 
 type MinioConfig struct {
@@ -136,7 +130,8 @@ func extractNumber(objectName string) int {
 	return num
 }
 
-func (m *MinioClient) UploadObject(ctx context.Context, objectName string, data *message) error {
+func (m *MinioClient) UploadObject(ctx context.Context, objectName string, data *KafkaMessage) error {
+	// Marshal JSON without spaces and in one line
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
@@ -154,7 +149,7 @@ func (m *MinioClient) UploadObject(ctx context.Context, objectName string, data 
 	return nil
 }
 
-func generateRandomData(r *rand.Rand) *message {
+func generateRandomData(r *rand.Rand) *KafkaMessage {
 	IDs := []string{"1", "2", "3", "4"}
 	names := []string{"John", "Mike", "Dwight", "Pam", "Kevin"}
 	cars := []string{"Kia", "Ford", "BMW"}
@@ -166,12 +161,12 @@ func generateRandomData(r *rand.Rand) *message {
 	randomCar := cars[r.Intn(len(cars))]
 	randomColor := colors[r.Intn(len(colors))]
 
-	return &message{
+	return &KafkaMessage{
 		Key: fmt.Sprintf("key-%s", randomID),
-		Value: value{
-			User:  randomName,
-			Car:   randomCar,
-			Color: randomColor,
+		Value: map[string]interface{}{
+			"user":  randomName,
+			"car":   randomCar,
+			"color": randomColor,
 		},
 	}
 }
@@ -179,9 +174,9 @@ func generateRandomData(r *rand.Rand) *message {
 func main() {
 	// MinIO configuration
 	config := MinioConfig{
-		Endpoint:        "minio.kind.cluster", // Change to your MinIO endpoint
-		AccessKeyID:     "minio",              // Change to your access key
-		SecretAccessKey: "minio123",           // Change to your secret key
+		Endpoint:        "minio.kind.cluster",
+		AccessKeyID:     "minio",
+		SecretAccessKey: "minio123",
 		UseSSL:          false,
 		BucketName:      "texts",
 	}
@@ -208,7 +203,7 @@ func main() {
 	}
 
 	log.Printf("Starting from object number: %d", lastNumber+1)
-	log.Println("Generating objects infinitely... Press Ctrl+C to stop")
+	log.Println("Generating compact JSON objects for Lenses S3 Connector... Press Ctrl+C to stop")
 
 	// Initialize random number generator
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -246,15 +241,15 @@ func main() {
 				} else {
 					atomic.AddInt64(&uploadedCount, 1)
 					if atomic.LoadInt64(&uploadedCount)%10 == 0 {
-						log.Printf("Uploaded %d objects so far... Current: %s - Key: %s, User: %s, Car: %s, Color: %s",
-							atomic.LoadInt64(&uploadedCount), objectName, data.Key, data.Value.User, data.Value.Car, data.Value.Color)
+						// Show example of the compact JSON
+						jsonData, _ := json.Marshal(data)
+						log.Printf("Uploaded %d objects. Example: %s", atomic.LoadInt64(&uploadedCount), string(jsonData))
 					}
 				}
 
 				currentNumber++
 
 				// Small delay to prevent overwhelming the system
-				// Adjust this as needed for your use case
 				time.Sleep(2000 * time.Millisecond)
 			}
 		}

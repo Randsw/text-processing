@@ -336,8 +336,6 @@ spec:
   tasksMax: 1
   # https://docs.confluent.io/kafka-connect-elasticsearch/current/configuration_options.html
   config:
-    connector.class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
-    tasks.max: "1"
     topics: "result-topic"
     connection.url: "http://elasticsearch-es-http.elastic:9200"
     connection.username: "elastic"

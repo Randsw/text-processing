@@ -440,6 +440,9 @@ kind: Ingress
 metadata:
   name: schema-ingress
   namespace: kafka
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
   rules:

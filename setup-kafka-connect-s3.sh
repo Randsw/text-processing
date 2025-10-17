@@ -191,6 +191,20 @@ EOF
 
 cat << EOF | kubectl apply -f -
 apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: extract-topic
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    # http://kafka.apache.org/documentation/#topicconfigs
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaUser
 metadata:
   name: from-s3-user
@@ -247,7 +261,7 @@ spec:
         - Create
     - resource:
         type: topic
-        name: result-topic
+        name: extract-topic
       operations:
         - Write
         - Describe
@@ -296,11 +310,10 @@ spec:
     config.storage.replication.factor: 3
     offset.storage.replication.factor: 3
     status.storage.replication.factor: 3
-    key.converter: org.apache.kafka.connect.storage.StringConverter
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
+    value.converter.schema.registry.ssl.truststore.password: "JTU6rHCgVP3Ply63dsxRcpGs"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:
@@ -323,25 +336,19 @@ spec:
   tasksMax: 1
   # https://docs.confluent.io/kafka-connect-elasticsearch/current/configuration_options.html
   config:
-    connector.class: "io.lenses.streamreactor.connect.aws.s3.source.S3SourceConnector"
-    tasks.max: "1"
     connect.s3.kcql: |
-      INSERT INTO result-topic 
+      INSERT INTO extract-topic
       SELECT * 
       FROM texts:kafka
       STOREAS `JSON`
     name: s3-source
-    key.converter: org.apache.kafka.connect.storage.StringConverter
-    value.converter: io.confluent.connect.json.JsonSchemaConverter
-    value.converter.schema.registry.url: "https://confluent-schema-registry"
-    value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
+    errors.log.enable: true
     connect.s3.custom.endpoint: http://minio.minio.svc.cluster.local
     connect.s3.aws.region: us-east-1
     connect.s3.aws.secret.key: minio123
     connect.s3.aws.access.key: minio
     connect.s3.aws.auth.mode: Credentials
-    connect.s3.source.ordering.type: LastModified
+    connect.s3.ordering.type: LastModified
     connect.s3.source.partition.extractor.regex: none
     # Important: Force path-style access and handle bucket naming
     connect.s3.vhost.bucket: "true"
