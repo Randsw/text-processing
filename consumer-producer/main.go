@@ -24,7 +24,7 @@ type KafkaInMessage string
 
 type KafkaOutMessage struct {
 	Key   string  `json:"key"`
-	Value message `json:"message"`
+	Value message `json:"value"`
 }
 
 type message struct {
