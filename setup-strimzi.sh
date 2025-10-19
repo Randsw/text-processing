@@ -295,6 +295,9 @@ spec:
   podMetricsEndpoints:
   - path: /metrics
     port: healthcheck
+EOF
+
+cat << 'EOF' | kubectl apply -f -
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor

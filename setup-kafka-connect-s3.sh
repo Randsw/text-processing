@@ -279,7 +279,7 @@ spec:
   version: 4.1.0
   replicas: 1
   bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  image: ttl.sh/randsw-strimzi-connect-example-4.1.1-s3:24h
+  image: ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h
   template:
     pod:
       volumes:
@@ -313,7 +313,7 @@ spec:
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "JTU6rHCgVP3Ply63dsxRcpGs"
+    value.converter.schema.registry.ssl.truststore.password: "WqrNbyPShFdeJi22irVjIYK4"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:

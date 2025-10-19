@@ -31,14 +31,8 @@ EOF
 
 cat << 'EOF' | kubectl apply -f -
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: vls-dashboard
-  namespace: victoria-logs
-  labels:
-    grafana_dashboard: "1"
 data:
-  vls-logs-dashboard.yaml: |-
+  vls-logs-dashboard.json: |-
     {
       "annotations": {
         "list": [
@@ -114,8 +108,8 @@ data:
         },
         {
           "datasource": {
-            "type": "victorialogs-datasource",
-            "uid": "P566C6523BE02F42C"
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
           },
           "fieldConfig": {
             "defaults": {
@@ -168,7 +162,7 @@ data:
                 "uid": "P566C6523BE02F42C"
               },
               "editorMode": "code",
-              "expr": "count by (namespace) (kube_pod_info{namespace=~"$namespace"})",
+              "expr": "count by (namespace) (kube_pod_info{namespace=~\"$namespace\"})",
               "queryType": "stats",
               "refId": "A"
             }
@@ -1233,4 +1227,10 @@ data:
       "uid": "be5zidev72m80f",
       "version": 1
     }
+kind: ConfigMap
+metadata:
+  name: vls-dashboard
+  namespace: victoria-logs
+  labels:
+    grafana_dashboard: "1"
 EOF

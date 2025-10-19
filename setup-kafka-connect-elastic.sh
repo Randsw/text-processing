@@ -279,7 +279,7 @@ spec:
   version: 4.1.0
   replicas: 1
   bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  image: ttl.sh/randsw-strimzi-connect-example-4.1.1:24h
+  image: ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h
   template:
     pod:
       volumes:
@@ -314,7 +314,7 @@ spec:
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "DVMUISGHlDbwvEFfIqzGdFLy"
+    value.converter.schema.registry.ssl.truststore.password: "WqrNbyPShFdeJi22irVjIYK4"
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:
@@ -339,7 +339,7 @@ spec:
     topics: "result-topic"
     connection.url: "http://elasticsearch-es-http.elastic:9200"
     connection.username: "elastic"
-    connection.password: "3umqP1321DgX6d9Qra3ry3q1"
+    connection.password: "7F8j3GF5Jqg6m4oap27Vd39h"
     key.ignore: "true"
     schema.ignore: "true"
     behavior.on.null.values: "delete"
