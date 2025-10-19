@@ -47,6 +47,48 @@ Password:
 
 Run `./setup-vl.sh`
 
+## Deploy minio and minio tenant with 4 node pool
+
+Run `./setup-minio.sh`
+
+## Access minio UI and create bucket
+
+Go to `http://minio-console.kind.cluster`
+
+Login - minio
+
+Password - minio123
+
+Create bucket named `texts` using ui
+
+## Deploy ElasticSearch and Kibana
+
+Run `./setup-elastic.sh`
+
+## Get kibana password
+
+Login - elastic
+
+Password:
+
+`kubectl get secret elasticsearch-es-elastic-user -n elastic -o go-template='{{.data.elastic | base64decode }}'`
+
+## Access kibana UI
+
+Go to `http://kibana.kind.cluster`
+
+## Deploy Kafka Cluster and Schema Registry
+
+Run `./kafka-cluster.sh` to deploy 3 Kafka brocker and 3 Kafka KRaft control node and Schema Registry. Schema-registry required special user and topic to storage his data in Kafka so we deploy them too.
+
+Schema-Registry deployed using [ssr-operator.](https://github.com/Randsw/schema-registry-operator-strimzi)
+
+User deployed usind `KafkaUser` CR and named `confluent-schema-registry`.
+Topic deployed usind `KafkaTopic` CR and named `registry-schemas`.
+
+Mow we have running Kafka Cluser with Schema REgistry inside our `kafka` namespace.
+
+You can access Schema registry at `http://schema.kind.cluster` :warning: Schema registry used HTTP/2
 
 
 
