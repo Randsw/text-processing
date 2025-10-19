@@ -120,7 +120,7 @@ func main() {
 
 	deser, err := jsonschema.NewDeserializer(client, serde.ValueSerde, jsonschema.NewDeserializerConfig())
 	if err != nil {
-		logger.Error("Failed to create serializer: %s\n", zap.String("err", err.Error()))
+		logger.Error("Failed to create deserializer: %s\n", zap.String("err", err.Error()))
 		os.Exit(1)
 	}
 
@@ -150,12 +150,25 @@ func main() {
 
 	wg.Add(1)
 	go func() {
+		maxRetries := 10
+		retryDelay := time.Second * 2
+		var m kafka.Message
 		for {
 			defer wg.Done()
 			// make a new reader that consumes from topic
-			m, err := r.ReadMessage(context.Background())
-			if err != nil {
-				logger.Error("Failed to read message", zap.String("err", err.Error()))
+			for i := range maxRetries {
+				m, err = r.ReadMessage(context.Background())
+				if err != nil {
+					logger.Error("Failed to read message", zap.String("err", err.Error()))
+
+					if i == maxRetries-1 {
+						// Last attempt failed
+						os.Exit(1)
+					}
+					time.Sleep(retryDelay)
+					continue
+				}
+				break
 			}
 			var inValue KafkaInMessage
 			err = deser.DeserializeInto(topic, m.Value, &inValue)
@@ -181,7 +194,7 @@ func main() {
 			}
 			err = writer.WriteMessages(context.Background(), msg)
 			if err != nil {
-				logger.Error("Failed to create serializer: %s\n", zap.String("err", err.Error()))
+				logger.Error("Failed to write message to topic: %s\n", zap.String("err", err.Error()))
 				return
 			} else {
 				logger.Info("produced", zap.String("key", string(msg.Key)), zap.String("message", string(msg.Value)))
