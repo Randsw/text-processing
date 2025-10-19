@@ -1,6 +1,6 @@
-# Real-Time Text Processing Pipeline
+# Kubernetes Data Pipeline Setup Guide
 
-This project demonstrates a real-time data pipeline for processing text documents, built with a Kafka-centric architecture and full observability.
+This guide helps you set up a complete data pipeline using Kubernetes with various monitoring, logging, and data processing components.
 
 ## Architecture Overview
 
@@ -9,7 +9,7 @@ This project demonstrates a real-time data pipeline for processing text document
   * **Ingestion Tool:** The **Lenses S3 Source Connector** for Kafka Connect reads the files and streams them into a Kafka topic.
 
 * **Stream Processing**
-  * **Tool:** A custom Kafka Streams application or consumer.
+  * **Tool:** A custom application or consumer.
   * **Function:** Consumes the raw text data, simulates text processing (e.g., NLP, sentiment analysis, data enrichment), and produces the refined results to a new Kafka topic.
 
 * **Data Sinking & Indexing**
@@ -20,6 +20,10 @@ This project demonstrates a real-time data pipeline for processing text document
   * **Metrics:** System, JVM, and custom application metrics are collected and visualized using **VictoriaMetrics**.
   * **Logging:** All application and infrastructure logs are centralized, stored, and analyzed using **VictoriaLogs**.
 
+MinIO S3 → Kafka Connect S3 Source → Kafka → Microservice → Kafka Connect ElasticSearch Sink → ElasticSearch/Kibana
+│
+└── VictoriaMetrics (Monitoring) + VictoriaLogs (Logging) + Grafana (Visualization)
+
 ## Requirements
 
 * docker
@@ -27,178 +31,233 @@ This project demonstrates a real-time data pipeline for processing text document
 * kind cli
 * helm
 
-## Setup kubernetes cluster
+## Setup real-time pipeline
 
-Run `./cluster-setup.sh` and you got 1 control-plane nodes and 3 worker nodes kubernetes cluster with installed ingress-nginx, metallb and 4 proxy image repository in docker containers in one network
+### 1. Kubernetes Cluster Setup
 
-## Deploy VictoriaMetrics kubernetes stack with Grafana and VictoriaLogs Datasource
+Run the following command to create a Kubernetes cluster with 1 control-plane node and 3 worker nodes:
+
+```bash
+./cluster-setup.sh
+```
+
+Components deployed:
+
+* Ingress-nginx
+
+* MetalLB
+
+* 4 proxy image repositories in Docker containers
+
+### 2. Deploy VictoriaMetrics kubernetes stack with Grafana and VictoriaLogs Datasource
 
 Run `./setup-vm.sh`
 
-## Get grafana password
+Grafana Access:
 
-Login - admin
+* Login: admin
 
-Password:
+* Get Password: `kubectl get secret --namespace victoria-metrics vm-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo`
 
-`kubectl get secret --namespace victoria-metrics vm-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo`
-
-## Setup Ingress Nginx
+### 3. Ingress Nginx Setup
 
 Run `setup-nginx.sh`
 
-### Deploy ingress dashboard
+Recommended Dashboard:
 
-<https://grafana.com/grafana/dashboards/14314-kubernetes-nginx-ingress-controller-nextgen-devops-nirvana/> - for Ingress Metrics
+* [Kubernetes Nginx Ingress Controller Dashboard (ID: 14314)](https://grafana.com/grafana/dashboards/14314-kubernetes-nginx-ingress-controller-nextgen-devops-nirvana/)
 
-## Deploy VictoriaLogs with Vector
+### 4. VictoriaLogs with Vector
 
 Run `./setup-vl.sh`
 
-## Deploy minio and minio tenant with 4 node pool
+### 5. MinIO Storage Setup
 
 Run `./setup-minio.sh`
 
-### Deploy Minio dashboards
+MinIO Console Access:
 
-<https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/> - for MinIo buckets metrics
+* URL: http://minio-console.kind.cluster
 
-<https://grafana.com/grafana/dashboards/13502-minio-dashboard/> - for MinIo cluster metrics
+* Login: minio
 
-## Access minio UI and create bucket
+* Password: minio123
 
-Go to `http://minio-console.kind.cluster`
+Recommended Dashboards:
 
-Login - minio
+* [MinIO Bucket Dashboard (ID: 19237)](https://grafana.com/grafana/dashboards/19237-minio-bucket-dashboard/)
 
-Password - minio123
+* [MinIO Cluster Dashboard (ID: 13502)](https://grafana.com/grafana/dashboards/13502-minio-dashboard/)
 
-## Deploy ElasticSearch and Kibana
+### 6. ElasticSearch and Kibana
 
 Run `./setup-elastic.sh`
 
-## Get kibana password
+Kibana Access:
 
-Login - elastic
+* URL: http://kibana.kind.cluster
 
-Password:
+* Login: elastic
 
-`kubectl get secret elasticsearch-es-elastic-user -n elastic -o go-template='{{.data.elastic | base64decode }}'`
+* Get Password: `kubectl get secret elasticsearch-es-elastic-user -n elastic -o go-template='{{.data.elastic | base64decode }}'`
 
-## Access kibana UI
+Recommended Dashboards:
 
-Go to `http://kibana.kind.cluster`
+* [ElasticSearch Overview (ID: 14191)](https://grafana.com/grafana/dashboards/14191-elasticsearch-overview/)
 
-### Deploy ElasticSearch and Kibana dashboards
+* [Kibana Monitoring (ID: 21420)](https://grafana.com/grafana/dashboards/21420-kibana-monitoring/)
 
-<https://grafana.com/grafana/dashboards/14191-elasticsearch-overview/> - for ElasticSearch metrics
+## Kafka Ecosystem Setup
 
-<https://grafana.com/grafana/dashboards/21420-kibana-monitoring/> - for Kibana metrics
+### 7. Kafka Cluster and Schema Registry
 
-## Deploy Kafka Cluster and Schema Registry
+Deploy 3 Kafka brokers, 3 Kafka KRaft control nodes, and Schema Registry:
 
-Run `./kafka-cluster.sh` to deploy 3 Kafka brocker and 3 Kafka KRaft control node and Schema Registry. Schema-registry required special user and topic to storage his data in Kafka so we deploy them too.
+Run `./kafka-cluster.sh`
 
-Schema-Registry deployed using [ssr-operator.](https://github.com/Randsw/schema-registry-operator-strimzi)
+Components Deployed:
 
-User deployed usind `KafkaUser` CR and named `confluent-schema-registry`.
-Topic deployed usind `KafkaTopic` CR and named `registry-schemas`.
+* Kafka Cluster in `kafka` namespace
 
-Mow we have running Kafka Cluser with Schema Registry inside our `kafka` namespace.
+* Schema Registry (accessible at `https://schema.kind.cluster`)
 
-You can access Schema registry at `http://schema.kind.cluster` :warning: Schema registry used HTTP/2
+* KafkaUser: `confluent-schema-registry`
 
-## Deploy Kafka Connects
+* KafkaTopic: `registry-schemas`
 
-### Deploy s3 source connector
+* **Warning** Schema Registry uses HTTP/2
 
-#### Build source connector docker container
+### 8. Kafka Connectors
 
-Download confluentinc-kafka-connect-json-schema-converter from [Confluent Hub](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
+#### S3 Source Connector
 
-Build docker image using `Dockerfile-s3` and store it in docker repository.
+##### Build S3 Connector Image
 
-`docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile-s3 .`
+* Download [confluentinc-kafka-connect-json-schema-converter](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
 
-For example:
+* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile-s3 .`
 
-`docker build -t ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h -f Dockerfile-s3 .`
+For example: `docker build -t ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h -f Dockerfile-s3 .`
 
-Then pull your image to repository.
+##### Configure S3 Connector
 
-#### Create s3 source connector configuration
+1. Edit `setup-kafka-connect-s3.sh` with MinIO credentials:
 
-In file `setup-kafka-connect-s3.sh` enter credential for Minio:
+```yaml
+connect.s3.aws.access.key: minio
+connect.s3.aws.secret.key: minio123
+```
 
-`connect.s3.aws.access.key: minio`
+2. Get Schema Registry truststore password:
 
-`connect.s3.aws.secret.key: minio123`
+```bash
+kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}'
+```
 
-Also enter credential for schema registry truststore:
+3. Update connector configuration with the password
 
-Get password - `kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}'`
+4. Set your connector image in KafkaConnect spec
 
-Set password in config: `value.converter.schema.registry.ssl.truststore.password: "<your-password>"`
+##### Deploy S3 Connector
 
-Set your connector image name in `KafkaConnect` in section `spec.image`
+```bash
+./setup-kafka-connect-s3.sh
+```
 
-#### Run source kafka connector
+#### ElasticSearch Sink Connector
 
-Run `./setup-kafka-connect-s3.sh`
+##### Build ElasticSearch Connector Image
 
-### Deploy Elastic search connector
+* Download [confluentinc-kafka-connect-json-schema-converter](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
 
-#### Build sin connector docker container
+* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile .`
 
-Download confluentinc-kafka-connect-json-schema-converter from [Confluent Hub](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
+For example: `docker build -t ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h -f Dockerfile .`
 
-Build docker image using `Dockerfile` and store it in docker repository.
+##### Configure ElasticSearch Connector
 
-`docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile .`
+1. Edit `setup-kafka-connect-elastic.sh` with MinIO credentials:
 
-For example:
+```yaml
+connection.username: "elastic"
+connection.password: "<your-kibana-password>"
+```
 
-`docker build -t ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h -f Dockerfile .`
+2. Set Schema Registry truststore password (same as above)
 
-Then pull your image to repository.
+Deploy ElasticSearch Connector:
 
-#### Create elasticsearch sink configuration
+```bash
+./setup-kafka-connect-s3.sh
+```
 
-In file `setup-kafka-connect-elastic.sh` enter credential for ElasticSearch:
+3. Update connector configuration with the password
 
-`connection.username: "elastic"`
-`connection.password: "<your-kibana-password>"`
+4. Set your connector image in KafkaConnect spec
 
-Also enter credential for schema registry truststore:
+##### Deploy S3 Connector:
 
-Get password - `kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}'`
+```bash
+./setup-kafka-connect-s3.sh
+```
 
-Set password in config: `value.converter.schema.registry.ssl.truststore.password: "<your-password>"`
+#### 9. Example Microservice
 
-Set your connector image name in `KafkaConnect` in section `spec.image`
+Deploy a real-time data processing microservice that:
 
-#### Run sink kafka connector
+* Consumes raw data from Kafka topics
 
-Run `./setup-kafka-connect-elastic.sh`
+* Validates, enriches, filters, and transforms data
 
-### Deploy example microservice
+* Produces processed data to downstream topics
 
-This microservice acts as a real-time data processing layer within a Kafka-centric data pipeline. It consumes raw data events from a topic populated by a Kafka Connect S3 Source Connector. The service is responsible for validating, enriching, filtering, and transforming this data into a structured format suitable for search and analytics. The processed records are then produced to a downstream topic, from which a Kafka Connect Elasticsearch Sink Connector ingests them into the target Elasticsearch indices.
+```bash
+# Create Kafka user for microservice
+kubectl apply -f consumer-producer/manifests/kafka-user.yaml
 
-First, create user for microservice:
+# Deploy microservice
+kubectl apply -f consumer-producer/manifests/deployment.yaml
+```
 
-`kubectl apply -f consumer-producer/manifests/kafka-user.yaml`
+## Pipeline Testing
 
-Then deploy microservice:
+Generate test data to validate the entire pipeline:
 
-`kubectl apply -f consumer-producer/manifests/deployment.yaml`
+```bash
+cd minio-json-generator && go run main.go
+```
 
-### Test pipeline
-
-Start adding data to s3:
-
-`cd minio-json-generator && go run main.go`
-
-Check data appear at result-topci indices:
-
+Verify data appears in ElasticSearch indices.
 ![alt text](images/image.png)
+
+| Component | Purpose | Access URL |
+|-----------|---------|------------|
+| Grafana | Monitoring & Visualization | http://grafana.kind.cluster |
+| Kibana | ElasticSearch UI & Analytics | http://kibana.kind.cluster |
+| MinIO Console | S3 Storage Management | http://minio-console.kind.cluster |
+| Schema Registry | Kafka Schema Management | http://schema.kind.cluster |
+
+
+## Security Notes
+
+* All passwords are retrieved from Kubernetes secrets
+
+* Schema Registry uses SSL/TLS with truststore authentication
+
+* Kafka users are managed via Strimzi KafkaUser CRD
+
+* Ingress controllers provide external access with proper routing
+
+## Troubleshooting
+
+* Verify all pods are running: kubectl get pods -A
+
+* Check ingress routes: kubectl get ingress -A
+
+* View logs for specific components using kubectl logs
+
+* Validate Kafka connectivity and topic creation
+
+* Confirm MinIO bucket creation and file uploads
+
+This setup creates a scalable and resilient data processing system with comprehensive monitoring and logging capabilities.
