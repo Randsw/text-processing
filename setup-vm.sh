@@ -24,9 +24,9 @@ data:
         type: victoriametrics-logs-datasource
         access: proxy
         url: http://vls-victoria-logs-single-server.victoria-logs:9428
-        isDefault: false
-        editable: false
-        orgId: 1
+        isDefault: true
+        editable: true
+        orgId: 10
         uid: vls
 EOF
 
@@ -88,6 +88,37 @@ grafana:
   plugins:
     - victoriametrics-metrics-datasource
     - victoriametrics-logs-datasource
+  dashboards:
+    default:
+      victoriametrics:
+        url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/master/dashboards/victoriametrics.json
+      vmagent:
+        url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/master/dashboards/vmagent.json
+      nodeexporter:
+        gnetId: 1860
+        revision: 22
+        datasource: VictoriaMetrics
+      nginxingress:
+        gnetID: 14314
+        revision: 2
+        datasource: VictoriaMetrics
+      elasticsearch:
+        gnetID: 14191
+        revision: 1
+        datasource: VictoriaMetrics
+      kibana:
+        gnetID: 21420
+        revision: 1
+        datasource: VictoriaMetrics
+      minio:
+        gnetID: 13502
+        revision: 26
+        datasource: VictoriaMetrics
+      miniobucket:
+        gnetID: 19237
+        revision: 2
+        datasource: VictoriaMetrics
+      
 kubeEtcd:
   enabled: true
   service:

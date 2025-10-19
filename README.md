@@ -30,3 +30,36 @@ This project demonstrates a real-time data pipeline for processing text document
 ## Setup kubernetes cluster
 
 Run `./cluster-setup.sh` and you got 1 control-plane nodes and 3 worker nodes kubernetes cluster with installed ingress-nginx, metallb and 4 proxy image repository in docker containers in one network
+
+## Deploy VictoriaMetrics kubernetes stack with Grafana and VictoriaLogs Datasource
+
+Run `./setup-vms.sh`
+
+## Get grafana password
+
+Login - admin
+
+Password:
+
+`kubectl get secret --namespace victoria-metrics vm-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo`
+
+## Deploy VictoriaLogs with Vector
+
+Run `./setup-vl.sh`
+
+
+
+
+
+
+ElasticSearch dashboard - 14191
+Kibana Dashboard - 21420
+
+Minio bucket dashboard - 19237
+Minio dashboard - 13502
+MinIO Node Dashboard - 
+
+Nginx Ingress Dashboard - 14314
+Victoria logs  - 22084
+
+Victoria logs logs - 22759
