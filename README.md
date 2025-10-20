@@ -24,6 +24,8 @@ MinIO S3 → Kafka Connect S3 Source → Kafka → Microservice → Kafka Connec
 │
 └── VictoriaMetrics (Monitoring) + VictoriaLogs (Logging) + Grafana (Visualization)
 
+![text-processing overview](images/text-processing.png)
+
 ## Requirements
 
 * docker
@@ -77,7 +79,7 @@ Run `./setup-minio.sh`
 
 MinIO Console Access:
 
-* URL: http://minio-console.kind.cluster
+* URL: <http://minio-console.kind.cluster>
 
 * Login: minio
 
@@ -95,7 +97,7 @@ Run `./setup-elastic.sh`
 
 Kibana Access:
 
-* URL: http://kibana.kind.cluster
+* URL: <http://kibana.kind.cluster>
 
 * Login: elastic
 
@@ -195,7 +197,7 @@ Deploy ElasticSearch Connector:
 
 4. Set your connector image in KafkaConnect spec
 
-##### Deploy S3 Connector:
+##### Deploy Elasticsearch Connector
 
 ```bash
 ./setup-kafka-connect-s3.sh
@@ -232,11 +234,10 @@ Verify data appears in ElasticSearch indices.
 
 | Component | Purpose | Access URL |
 |-----------|---------|------------|
-| Grafana | Monitoring & Visualization | http://grafana.kind.cluster |
-| Kibana | ElasticSearch UI & Analytics | http://kibana.kind.cluster |
-| MinIO Console | S3 Storage Management | http://minio-console.kind.cluster |
-| Schema Registry | Kafka Schema Management | http://schema.kind.cluster |
-
+| Grafana | Monitoring & Visualization | <http://grafana.kind.cluster> |
+| Kibana | ElasticSearch UI & Analytics | <http://kibana.kind.cluster> |
+| MinIO Console | S3 Storage Management | <http://minio-console.kind.cluster> |
+| Schema Registry | Kafka Schema Management | <http://schema.kind.cluster> |
 
 ## Security Notes
 
