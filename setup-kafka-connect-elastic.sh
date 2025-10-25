@@ -189,6 +189,9 @@ data:
       type: GAUGE
 EOF
 
+#Get truststore password
+TRUSTSTORE_PASSWORD=$(kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}')
+
 cat << EOF | kubectl apply -f -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
@@ -279,7 +282,7 @@ spec:
   version: 4.1.0
   replicas: 1
   bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  image: ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h
+  image: ghcr.io/randsw/kafka-elasticsearch-sink-connector:latest
   template:
     pod:
       volumes:
@@ -314,7 +317,7 @@ spec:
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "WqrNbyPShFdeJi22irVjIYK4"
+    value.converter.schema.registry.ssl.truststore.password: $TRUSTSTORE_PASSWORD
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:
@@ -323,7 +326,10 @@ spec:
         key: metrics-config.yml
 EOF
 
-cat << 'EOF' | kubectl apply -f -
+#Get elasticsearch password
+ELASTIC_PASSWORD=$(kubectl get secret elasticsearch-es-elastic-user -n elastic -o go-template='{{.data.elastic | base64decode }}')
+
+cat << EOF | kubectl apply -f -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
@@ -339,15 +345,15 @@ spec:
     topics: "result-topic"
     connection.url: "http://elasticsearch-es-http.elastic:9200"
     connection.username: "elastic"
-    connection.password: "7F8j3GF5Jqg6m4oap27Vd39h"
+    connection.password: $ELASTIC_PASSWORD
     key.ignore: "true"
     schema.ignore: "true"
     behavior.on.null.values: "delete"
     drop.invalid.message: false
     transforms                          : "insertTS,formatTS"
-    transforms.insertTS.type            : "org.apache.kafka.connect.transforms.InsertField$Value"
+    transforms.insertTS.type            : "org.apache.kafka.connect.transforms.InsertField\$Value"
     transforms.insertTS.timestamp.field : "@timestamp"
-    transforms.formatTS.type            : "org.apache.kafka.connect.transforms.TimestampConverter$Value"
+    transforms.formatTS.type            : "org.apache.kafka.connect.transforms.TimestampConverter\$Value"
     transforms.formatTS.format          : "yyyy-MM-dd'T'HH:mm:ss'Z'"
     transforms.formatTS.field           : "@timestamp"
     transforms.formatTS.target.type     : "string"

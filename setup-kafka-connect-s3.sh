@@ -189,7 +189,10 @@ data:
       type: GAUGE
 EOF
 
-cat << EOF | kubectl apply -f -
+#Get truststore password
+TRUSTSTORE_PASSWORD=$(kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}')
+
+cat << EOF | kubectl apply -f --dry-run -oyaml -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -279,7 +282,7 @@ spec:
   version: 4.1.0
   replicas: 1
   bootstrapServers: kafka-cluster-kafka-bootstrap:9093
-  image: ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h
+  image: ghcr.io/randsw/kafka-s3-source-connector:latest
   template:
     pod:
       volumes:
@@ -313,7 +316,7 @@ spec:
     value.converter: io.confluent.connect.json.JsonSchemaConverter
     value.converter.schema.registry.url: "https://confluent-schema-registry"
     value.converter.schema.registry.ssl.truststore.location: /mnt/schemaregistry/truststore.jks
-    value.converter.schema.registry.ssl.truststore.password: "WqrNbyPShFdeJi22irVjIYK4"
+    value.converter.schema.registry.ssl.truststore.password: $TRUSTSTORE_PASSWORD
   metricsConfig:
     type: jmxPrometheusExporter
     valueFrom:

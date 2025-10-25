@@ -143,22 +143,7 @@ For example: `docker build -t ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h -f kafk
 
 ##### Configure S3 Connector
 
-1. Edit `setup-kafka-connect-s3.sh` with MinIO credentials:
-
-```yaml
-connect.s3.aws.access.key: minio
-connect.s3.aws.secret.key: minio123
-```
-
-2. Get Schema Registry truststore password:
-
-```bash
-kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}'
-```
-
-3. Update connector configuration with the password
-
-4. Set your connector image in KafkaConnect spec
+1. Set your connector image in KafkaConnect spec
 
 ##### Deploy S3 Connector
 
@@ -178,29 +163,12 @@ For example: `docker build -t ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h -f
 
 ##### Configure ElasticSearch Connector
 
-1. Edit `setup-kafka-connect-elastic.sh` with MinIO credentials:
+1. Set your connector image in KafkaConnect spec
 
-```yaml
-connection.username: "elastic"
-connection.password: "<your-kibana-password>"
-```
-
-2. Set Schema Registry truststore password (same as above)
-
-Deploy ElasticSearch Connector:
+##### Deploy ElasticSearch Connector
 
 ```bash
-./setup-kafka-connect-s3.sh
-```
-
-3. Update connector configuration with the password
-
-4. Set your connector image in KafkaConnect spec
-
-##### Deploy Elasticsearch Connector
-
-```bash
-./setup-kafka-connect-s3.sh
+./setup-kafka-connect-elastic.sh
 ```
 
 #### 9. Example Microservice
