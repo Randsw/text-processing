@@ -34,8 +34,6 @@ tenant:
   buckets:
     - name: texts
       objectLock: false
-    - name: results
-      objectLock: false
   prometheusOperator: false
   env:
     - name: MINIO_PROMETHEUS_AUTH_TYPE
