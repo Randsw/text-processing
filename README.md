@@ -135,11 +135,11 @@ Components Deployed:
 
 ##### Build S3 Connector Image
 
-* Download [confluentinc-kafka-connect-json-schema-converter](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
+* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f kafka-s3-source-connector/Dockerfile .`
 
-* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile-s3 .`
+For example: `docker build -t ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h -f kafka-s3-source-connector/Dockerfile .`
 
-For example: `docker build -t ttl.sh/randsw-strimzi-connect-s3-4.1.0:24h -f Dockerfile-s3 .`
+* Push to your docker registry
 
 ##### Configure S3 Connector
 
@@ -170,11 +170,11 @@ kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.dat
 
 ##### Build ElasticSearch Connector Image
 
-* Download [confluentinc-kafka-connect-json-schema-converter](https://www.confluent.io/hub/confluentinc/kafka-connect-json-schema-converter)
+* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f kafka-elasticsearch-sink-connector/Dockerfile .`
 
-* Build Docker image: `docker build -t <your-repo>/<your-image-name>:<your-tag> -f Dockerfile .`
+For example: `docker build -t ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h -f kafka-elasticsearch-sink-connectorDockerfile .`
 
-For example: `docker build -t ttl.sh/randsw-strimzi-connect-elastic-4.1.0:24h -f Dockerfile .`
+* Push to your docker registry
 
 ##### Configure ElasticSearch Connector
 
