@@ -192,7 +192,7 @@ EOF
 #Get truststore password
 TRUSTSTORE_PASSWORD=$(kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}')
 
-cat << EOF | kubectl apply -f --dry-run -oyaml -
+cat << EOF | kubectl apply -f -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:

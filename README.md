@@ -115,7 +115,7 @@ Recommended Dashboards:
 
 Deploy 3 Kafka brokers, 3 Kafka KRaft control nodes, and Schema Registry:
 
-Run `./kafka-cluster.sh`
+Run `./setup-strimzi.sh`
 
 Components Deployed:
 
