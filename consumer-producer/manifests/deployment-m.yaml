@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer-producer
+  namespace: kafka
+  labels:
+    app: consumer-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - name: consumer-producer
+        image: ghcr.io/mitya99/kafka-consumer-producer:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        env:
+        - name:  BOOTSTRAP_SERVERS
+          value: kafka-cluster-kafka-bootstrap:9093
+        - name:  TOPIC
+          value: extract-topic
+        - name:  SCHEMA_REGISTRY_URL
+          value: confluent-schema-registry
+        - name:  GROUP_ID
+          value: s3-consumer-group
+        - name:  OUT_TOPIC
+          value: result-topic
+        - name:  OLLAMA_MODEL
+          value: llama3.2
+        - name:  OLLAMA_HOST
+          value: 127.0.0.1:11434
+        volumeMounts:
+        - name: cluster-ca-cert
+          readOnly: true
+          mountPath: "/tmp/ca"
+        - name: client-mtls
+          readOnly: true
+          mountPath: "/tmp/client"
+      - name: llm
+        image: ghcr.io/mitya99/my_ollama:latest
+        imagePullPolicy: Always
+      volumes:
+        - name: cluster-ca-cert
+          secret:
+            secretName: kafka-cluster-cluster-ca-cert
+            defaultMode: 0444
+        - name: client-mtls
+          secret:
+            secretName: consumer-producer-user
+            defaultMode: 0444
