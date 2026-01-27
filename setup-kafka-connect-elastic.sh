@@ -193,7 +193,7 @@ EOF
 TRUSTSTORE_PASSWORD=$(kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}')
 
 cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: result-topic
@@ -207,7 +207,7 @@ spec:
     # http://kafka.apache.org/documentation/#topicconfigs
     cleanup.policy: compact
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: to-elastic-user
@@ -269,7 +269,7 @@ spec:
         - Read
         - Describe
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaConnect
 metadata:
   name: connect-elastic
@@ -305,6 +305,10 @@ spec:
       secretName: to-elastic-user
       certificate: user.crt
       key: user.key
+  groupId: connect-cluster
+  offsetStorageTopic: connect-cluster-offsets
+  configStorageTopic: connect-cluster-configs
+  statusStorageTopic: connect-cluster-status
   config:
     group.id: connect-cluster
     offset.storage.topic: connect-cluster-offsets
@@ -330,7 +334,7 @@ EOF
 ELASTIC_PASSWORD=$(kubectl get secret elasticsearch-es-elastic-user -n elastic -o go-template='{{.data.elastic | base64decode }}')
 
 cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaConnector
 metadata:
   name: elasticsearch-sink-connector

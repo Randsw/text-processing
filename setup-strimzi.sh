@@ -180,7 +180,7 @@ data:
 EOF
 
 cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
   name: controller
@@ -198,7 +198,7 @@ spec:
         type: ephemeral
         kraftMetadata: shared
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
   name: broker
@@ -216,7 +216,7 @@ spec:
         type: ephemeral
         kraftMetadata: shared
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: kafka-cluster
@@ -352,7 +352,7 @@ EOF
 # Deploy ssr-operator and proper Topic and User
 
 cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: registry-schemas
@@ -366,7 +366,7 @@ spec:
     # http://kafka.apache.org/documentation/#topicconfigs
     cleanup.policy: compact
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: confluent-schema-registry

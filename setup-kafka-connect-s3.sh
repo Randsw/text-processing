@@ -193,7 +193,7 @@ EOF
 TRUSTSTORE_PASSWORD=$(kubectl get secret confluent-schema-registry-jks -n kafka -o go-template='{{.data.truststore_password | base64decode }}')
 
 cat << EOF | kubectl apply -f -
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: extract-topic
@@ -207,7 +207,7 @@ spec:
     # http://kafka.apache.org/documentation/#topicconfigs
     cleanup.policy: delete
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: from-s3-user
@@ -269,7 +269,7 @@ spec:
         - Write
         - Describe
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaConnect
 metadata:
   name: connect-s3
@@ -305,6 +305,10 @@ spec:
       secretName: from-s3-user
       certificate: user.crt
       key: user.key
+  groupId: s3-connect-cluster
+  offsetStorageTopic: s3-connect-cluster-offsets
+  configStorageTopic: s3-connect-cluster-configs
+  statusStorageTopic: s3-connect-cluster-status
   config:
     group.id: s3-connect-cluster
     offset.storage.topic: s3-connect-cluster-offsets

@@ -47,7 +47,7 @@ spec:
           mountPath: "/tmp/client"
       - name: llm
         image: ghcr.io/mitya99/my_ollama:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
       volumes:
         - name: cluster-ca-cert
           secret:
