@@ -129,40 +129,21 @@ Components Deployed:
 
 * **Warning** Schema Registry uses HTTP/2
 
-The Schema Registry is deployed via the `StrimziSchemaRegistry` CRD
-([ssr-operator](https://github.com/Randsw/schema-registry-operator-strimzi)). The configuration applied by
-`./setup-strimzi.sh`:
+The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://github.com/Randsw/schema-registry-operator-strimzi) custom resource (group `strimziregistryoperator.randsw.code/v1alpha1`). Its main `spec` fields are:
 
-```yaml
-apiVersion: strimziregistryoperator.randsw.code/v1alpha1
-kind: StrimziSchemaRegistry
-metadata:
-  name: confluent-schema-registry
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: kafka-cluster
-spec:
-  securehttp:         true
-  clientauth:         false
-  listener:           "tls"
-  compatibilitylevel: "forward"
-  securityprotocol:   "SSL"
-  tlssecretname:      ""
-  kafkastoretopic:                  "registry-schemas"
-  kafkastoretopicreplicationfactor: 3
-  schemaregistrygroupid:            "schema-registry"
-  mastereligibility:  true
-```
+| Field | Description | Default |
+|-------|-------------|---------|
+| `listener` | Kafka listener name used to connect to the brokers | `tls` |
+| `securityprotocol` | Kafka security protocol: `SSL`, `SASL_SSL`, `PLAINTEXT`, `SASL_PLAINTEXT` | `SSL` |
+| `compatibilitylevel` | Schema compatibility level: `none`, `backward`, `backward_transitive`, `forward`, `forward_transitive`, `full`, `full_transitive` | `forward` |
+| `securehttp` | Enable TLS on the Schema Registry REST API (required) | — |
+| `tlssecretname` | Name of a JKS-format secret holding the REST API TLS key/cert. Empty means the operator generates one signed by the Kafka cluster CA | `""` |
+| `heapopts` | JVM heap options | `-Xms512M -Xmx512M` |
+| `template` | Standard Kubernetes pod template (required) | — |
 
-* `securehttp: true` — Schema Registry REST API is served over HTTPS (port `443` on the service)
-* `clientauth: false` — mutual TLS on the REST API endpoint is disabled
-* `tlssecretname: ""` — the operator auto-generates the REST API TLS certificate signed by the Kafka cluster CA
-* `securityprotocol: SSL` — mTLS connection to Kafka using the `confluent-schema-registry` KafkaUser certificates
-* `kafkastoretopic` / `kafkastoretopicreplicationfactor` — schema storage topic and its replication factor
-* `schemaregistrygroupid` — Kafka consumer group id used by Schema Registry (matches the KafkaUser ACL)
-
-For the full list of configuration properties see the
-[ssr-operator documentation](https://github.com/Randsw/schema-registry-operator-strimzi#6-strimzischemaregistry-configuration-properties).
+* `SSL` requires a `KafkaUser` named after the CR with `authentication.type: tls` (used by this setup).
+* `SASL_SSL` and `SASL_PLAINTEXT` require a `KafkaUser` named after the CR with `authentication.type: scram-sha-512`.
+* `PLAINTEXT` requires no user secret.
 
 ### 8. Kafka Connectors
 
@@ -240,7 +221,7 @@ Verify data appears in ElasticSearch indices.
 | Grafana | Monitoring & Visualization | <http://grafana.kind.cluster> |
 | Kibana | ElasticSearch UI & Analytics | <http://kibana.kind.cluster> |
 | MinIO Console | S3 Storage Management | <http://minio-console.kind.cluster> |
-| Schema Registry | Kafka Schema Management | <http://schema.kind.cluster> |
+| Schema Registry | Kafka Schema Management | <https://schema.kind.cluster> |
 
 ## Security Notes
 

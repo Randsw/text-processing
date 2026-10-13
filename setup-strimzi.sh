@@ -428,12 +428,13 @@ spec:
   clientauth:         false
   listener:           "tls"
   compatibilitylevel: "forward"
+  # Valid values: SSL, SASL_SSL, PLAINTEXT, SASL_PLAINTEXT
   securityprotocol:   "SSL"
+  # Optional: JKS-format secret holding the REST API TLS key/cert.
+  # Empty means the operator generates one signed by the Kafka cluster CA.
   tlssecretname:      ""
-  kafkastoretopic:                  "registry-schemas"
-  kafkastoretopicreplicationfactor: 3
-  schemaregistrygroupid:            "schema-registry"
-  mastereligibility:  true
+  # Optional: JVM heap options (defaults to -Xms512M -Xmx512M)
+  heapopts:           "-Xms512M -Xmx512M"
   template:
     spec:
       containers:
