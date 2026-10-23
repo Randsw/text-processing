@@ -129,6 +129,41 @@ Components Deployed:
 
 * **Warning** Schema Registry uses HTTP/2
 
+The Schema Registry is deployed via the `StrimziSchemaRegistry` CRD
+([ssr-operator](https://github.com/Randsw/schema-registry-operator-strimzi)). The configuration applied by
+`./setup-strimzi.sh`:
+
+```yaml
+apiVersion: strimziregistryoperator.randsw.code/v1alpha1
+kind: StrimziSchemaRegistry
+metadata:
+  name: confluent-schema-registry
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  securehttp:         true
+  clientauth:         false
+  listener:           "tls"
+  compatibilitylevel: "forward"
+  securityprotocol:   "SSL"
+  tlssecretname:      ""
+  kafkastoretopic:                  "registry-schemas"
+  kafkastoretopicreplicationfactor: 3
+  schemaregistrygroupid:            "schema-registry"
+  mastereligibility:  true
+```
+
+* `securehttp: true` — Schema Registry REST API is served over HTTPS (port `443` on the service)
+* `clientauth: false` — mutual TLS on the REST API endpoint is disabled
+* `tlssecretname: ""` — the operator auto-generates the REST API TLS certificate signed by the Kafka cluster CA
+* `securityprotocol: SSL` — mTLS connection to Kafka using the `confluent-schema-registry` KafkaUser certificates
+* `kafkastoretopic` / `kafkastoretopicreplicationfactor` — schema storage topic and its replication factor
+* `schemaregistrygroupid` — Kafka consumer group id used by Schema Registry (matches the KafkaUser ACL)
+
+For the full list of configuration properties see the
+[ssr-operator documentation](https://github.com/Randsw/schema-registry-operator-strimzi#6-strimzischemaregistry-configuration-properties).
+
 ### 8. Kafka Connectors
 
 #### S3 Source Connector

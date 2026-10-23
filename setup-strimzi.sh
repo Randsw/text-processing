@@ -425,9 +425,15 @@ metadata:
     strimzi.io/cluster: kafka-cluster
 spec:
   securehttp:         true
+  clientauth:         false
   listener:           "tls"
   compatibilitylevel: "forward"
   securityprotocol:   "SSL"
+  tlssecretname:      ""
+  kafkastoretopic:                  "registry-schemas"
+  kafkastoretopicreplicationfactor: 3
+  schemaregistrygroupid:            "schema-registry"
+  mastereligibility:  true
   template:
     spec:
       containers:
