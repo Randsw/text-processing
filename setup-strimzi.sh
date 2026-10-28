@@ -435,6 +435,29 @@ spec:
   tlssecretname:      ""
   # Optional: JVM heap options (defaults to -Xms512M -Xmx512M)
   heapopts:           "-Xms512M -Xmx512M"
+  # Name of the Kafka topic used to store schemas (must match the KafkaTopic above)
+  kafkastoretopic: "registry-schemas"
+  # Replication factor for auto-created schema topics; unset keeps Confluent's default (3)
+  kafkastoretopicreplicationfactor: 3
+  # Kafka consumer group id used by Schema Registry (must match the KafkaUser ACL group prefix above)
+  schemaregistrygroupid: "schema-registry"
+  # Whether this instance can be elected Schema Registry master
+  mastereligibility: true
+  # Optional: arbitrary Confluent Schema Registry properties (dotted form).
+  # Each key becomes a SCHEMA_REGISTRY_* env variable; operator-managed keys are ignored.
+  # configuration:
+  #   kafkastore.timeout.ms: "30000"
+  # Optional: managed Service tuning (type: ClusterIP|NodePort|LoadBalancer,
+  # port, nodeport, annotations, labels)
+  service:
+    type: ClusterIP
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8085"
+  # Optional: NetworkPolicy for Schema Registry pods
+  networkpolicy:
+    enabled: false
+    # allowcrossnamespaceingress: true
   template:
     spec:
       containers:

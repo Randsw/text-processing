@@ -137,13 +137,37 @@ The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://gith
 | `securityprotocol` | Kafka security protocol: `SSL`, `SASL_SSL`, `PLAINTEXT`, `SASL_PLAINTEXT` | `SSL` |
 | `compatibilitylevel` | Schema compatibility level: `none`, `backward`, `backward_transitive`, `forward`, `forward_transitive`, `full`, `full_transitive` | `forward` |
 | `securehttp` | Enable TLS on the Schema Registry REST API (required) | — |
+| `clientauth` | Enable mutual TLS (mTLS) on the REST API; only valid when `securehttp` is `true` | `false` |
 | `tlssecretname` | Name of a JKS-format secret holding the REST API TLS key/cert. Empty means the operator generates one signed by the Kafka cluster CA | `""` |
 | `heapopts` | JVM heap options | `-Xms512M -Xmx512M` |
+| `kafkastoretopic` | Name of the Kafka topic used to store schemas (must match the deployed `KafkaTopic`) | `registry-schemas` |
+| `kafkastoretopicreplicationfactor` | Replication factor used when Schema Registry auto-creates the storage topic; unset keeps Confluent's built-in default | `3` (Confluent default) |
+| `schemaregistrygroupid` | Kafka consumer group id used by Schema Registry (must match the `KafkaUser` ACL group prefix) | `schema-registry` |
+| `mastereligibility` | Whether this instance is eligible to be elected Schema Registry master | `true` |
+| `configuration` | Map of arbitrary Confluent Schema Registry properties in dotted form (e.g. `kafkastore.timeout.ms`); each key becomes a `SCHEMA_REGISTRY_*` env variable; operator-managed keys are ignored | — |
+| `service` | Managed Service tuning: `type` (`ClusterIP`, `NodePort`, `LoadBalancer`), `port`, `nodeport`, `annotations`, `labels` | `ClusterIP`, port `80` (HTTP) / `443` (TLS) |
+| `networkpolicy` | NetworkPolicy for Schema Registry pods: `enabled`, `allowcrossnamespaceingress` | `enabled: false` |
 | `template` | Standard Kubernetes pod template (required) | — |
 
 * `SSL` requires a `KafkaUser` named after the CR with `authentication.type: tls` (used by this setup).
 * `SASL_SSL` and `SASL_PLAINTEXT` require a `KafkaUser` named after the CR with `authentication.type: scram-sha-512`.
 * `PLAINTEXT` requires no user secret.
+
+Example of the optional `configuration` and `service` fields:
+
+```yaml
+spec:
+  # ...
+  configuration:
+    kafkastore.timeout.ms: "30000"
+  service:
+    type: ClusterIP
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8085"
+  networkpolicy:
+    enabled: false
+```
 
 ### 8. Kafka Connectors
 
