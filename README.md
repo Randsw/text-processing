@@ -144,6 +144,7 @@ The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://gith
 | `kafkastoretopicreplicationfactor` | Replication factor used when Schema Registry auto-creates the storage topic; unset keeps Confluent's built-in default | `3` (Confluent default) |
 | `schemaregistrygroupid` | Kafka consumer group id used by Schema Registry (must match the `KafkaUser` ACL group prefix) | `schema-registry` |
 | `mastereligibility` | Whether this instance is eligible to be elected Schema Registry master | `true` |
+| `replicas` | Number of Schema Registry replicas; each replica advertises its own pod IP and master election is handled by Schema Registry | `1` |
 | `configuration` | Map of arbitrary Confluent Schema Registry properties in dotted form (e.g. `kafkastore.timeout.ms`); each key becomes a `SCHEMA_REGISTRY_*` env variable; operator-managed keys are ignored | — |
 | `service` | Managed Service tuning: `type` (`ClusterIP`, `NodePort`, `LoadBalancer`), `port`, `nodeport`, `annotations`, `labels` | `ClusterIP`, port `80` (HTTP) / `443` (TLS) |
 | `networkpolicy` | NetworkPolicy for Schema Registry pods: `enabled`, `allowcrossnamespaceingress` | `enabled: false` |

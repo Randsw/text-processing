@@ -443,6 +443,8 @@ spec:
   schemaregistrygroupid: "schema-registry"
   # Whether this instance can be elected Schema Registry master
   mastereligibility: true
+  # Number of Schema Registry replicas (defaults to 1)
+  replicas: 1
   # Optional: arbitrary Confluent Schema Registry properties (dotted form).
   # Each key becomes a SCHEMA_REGISTRY_* env variable; operator-managed keys are ignored.
   # configuration:
