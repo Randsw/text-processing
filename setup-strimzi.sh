@@ -416,7 +416,7 @@ helm upgrade --install --wait --timeout 35m --atomic --namespace kafka --create-
   --repo https://randsw.github.io/schema-registry-operator-strimzi/ ssr-operator ssr-operator
 
 cat << EOF | kubectl apply -f -
-apiVersion: strimziregistryoperator.randsw.code/v1alpha1
+apiVersion: strimziregistryoperator.randsw.code/v1beta1
 kind: StrimziSchemaRegistry
 metadata:
   name: confluent-schema-registry
@@ -430,9 +430,13 @@ spec:
   compatibilitylevel: "forward"
   # Valid values: SSL, SASL_SSL, PLAINTEXT, SASL_PLAINTEXT
   securityprotocol:   "SSL"
-  # Optional: JKS-format secret holding the REST API TLS key/cert.
+  # Optional: secret holding the REST API TLS key/cert. It can be a JKS/PKCS12
+  # keystore (see keystoretype below) or a standard kubernetes.io/tls PEM secret.
   # Empty means the operator generates one signed by the Kafka cluster CA.
   tlssecretname:      ""
+  # Keystore format of the user-provided TLS secret: JKS (default) or PKCS12.
+  # Has no effect for kubernetes.io/tls (PEM) secrets or an empty tlssecretname.
+  keystoretype:       "JKS"
   # Optional: JVM heap options (defaults to -Xms512M -Xmx512M)
   heapopts:           "-Xms512M -Xmx512M"
   # Name of the Kafka topic used to store schemas (must match the KafkaTopic above)
@@ -464,7 +468,7 @@ spec:
     spec:
       containers:
         - name: confluent-sr
-          image: confluentinc/cp-schema-registry:7.6.5
+          image: confluentinc/cp-schema-registry:8.4.1
           imagePullPolicy: IfNotPresent
       restartPolicy: Always
 EOF

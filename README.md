@@ -129,7 +129,7 @@ Components Deployed:
 
 * **Warning** Schema Registry uses HTTP/2
 
-The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://github.com/Randsw/schema-registry-operator-strimzi) custom resource (group `strimziregistryoperator.randsw.code/v1alpha1`). Its main `spec` fields are:
+The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://github.com/Randsw/schema-registry-operator-strimzi) custom resource (group `strimziregistryoperator.randsw.code/v1beta1`). Its main `spec` fields are:
 
 | Field | Description | Default |
 |-------|-------------|---------|
@@ -138,8 +138,9 @@ The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://gith
 | `compatibilitylevel` | Schema compatibility level: `none`, `backward`, `backward_transitive`, `forward`, `forward_transitive`, `full`, `full_transitive` | `forward` |
 | `securehttp` | Enable TLS on the Schema Registry REST API (required) | — |
 | `clientauth` | Enable mutual TLS (mTLS) on the REST API; only valid when `securehttp` is `true` | `false` |
-| `tlssecretname` | Name of a JKS-format secret holding the REST API TLS key/cert. Empty means the operator generates one signed by the Kafka cluster CA | `""` |
-| `heapopts` | JVM heap options | `-Xms512M -Xmx512M` |
+| `tlssecretname` | Name of a secret holding the REST API TLS key/cert (JKS/PKCS12 keystore or `kubernetes.io/tls` PEM secret). Empty means the operator generates a JKS keystore signed by the Kafka cluster CA | `""` |
+| `keystoretype` | Keystore format of the user-provided `tlssecretname` secret: `JKS` or `PKCS12`; ignored for PEM secrets and when `tlssecretname` is empty | `JKS` |
+| `heapopts` | JVM heap options (e.g. `-Xms512m -Xmx2g`) | `-Xms512M -Xmx512M` |
 | `kafkastoretopic` | Name of the Kafka topic used to store schemas (must match the deployed `KafkaTopic`) | `registry-schemas` |
 | `kafkastoretopicreplicationfactor` | Replication factor used when Schema Registry auto-creates the storage topic; unset keeps Confluent's built-in default | `3` (Confluent default) |
 | `schemaregistrygroupid` | Kafka consumer group id used by Schema Registry (must match the `KafkaUser` ACL group prefix) | `schema-registry` |
@@ -153,6 +154,9 @@ The Schema Registry is deployed using the [`StrimziSchemaRegistry`](https://gith
 * `SSL` requires a `KafkaUser` named after the CR with `authentication.type: tls` (used by this setup).
 * `SASL_SSL` and `SASL_PLAINTEXT` require a `KafkaUser` named after the CR with `authentication.type: scram-sha-512`.
 * `PLAINTEXT` requires no user secret.
+* `replicas` greater than `1` together with `securehttp: true` requires a non-empty `tlssecretname` whose certificate covers the replica addresses; otherwise the CR is rejected with `InvalidSpec`.
+
+The setup script deploys the Schema Registry image through `spec.template` (`confluentinc/cp-schema-registry:8.4.1`, the current recommended line). Older 7.6.x images remain supported.
 
 Example of the optional `configuration` and `service` fields:
 
